@@ -1,4 +1,5 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2018-2024, Arm Limited and Contributors
+ * Copyright (c) 2024, NVIDIA CORPORATION. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,19 +23,30 @@
 #include <typeinfo>
 #include <vector>
 
-#include "core/sampler.h"
 #include "scene/component.h"
+#include "scene/components/sampler.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
+        class Image;
+
+        class Texture : public Component {
         public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
+            Texture(const std::string& name);
+            Texture(Texture&& other) = default;
+            virtual ~Texture() = default;
+
             virtual std::type_index getType() override;
 
-            core::Sampler m_sampler;
+            void setImage(Image& image);
+            Image* getImage();
+
+            void setSampler(Sampler& sampler);
+            Sampler* getSampler();
+
+        private:
+            Image* m_image{ nullptr };
+            Sampler* m_sampler{ nullptr };
         };
     }
 }

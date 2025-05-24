@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2019-2024, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,19 +22,39 @@
 #include <typeinfo>
 #include <vector>
 
-#include "core/sampler.h"
+#include "global_common.h"
+#include "common/helper.h"
 #include "scene/component.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
+        class Node;
+
+        class Camera : public Component {
         public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
+            Camera(const std::string& name);
+
+            virtual ~Camera() = default;
+
             virtual std::type_index getType() override;
 
-            core::Sampler m_sampler;
+            virtual glm::mat4 getProjection() = 0;
+
+            virtual void setAspectRatio(float aspect_ratio) = 0;
+
+            glm::mat4 getView();
+
+            void setNode(Node& node);
+
+            Node* getNode();
+
+            const glm::mat4 getPreRotation();
+
+            void setPreRotation(const glm::mat4& pre_rotation);
+
+        private:
+            Node* m_node{ nullptr };
+            glm::mat4 m_pre_rotation{ 1.0f };
         };
     }
 }

@@ -1,4 +1,5 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2018-2024, Arm Limited and Contributors
+ * Copyright (c) 2024, NVIDIA CORPORATION. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,21 +21,41 @@
 #include <memory>
 #include <string>
 #include <typeinfo>
+#include <unordered_map>
 #include <vector>
 
-#include "core/sampler.h"
+#include "global_common.h"
 #include "scene/component.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
+        class Texture;
+
+        enum class AlphaMode {
+            Opaque,
+            Mask,
+            Blend
+        };
+
+        class Material : public Component {
         public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
+            Material(const std::string& name);
+            Material(Material&& other) = default;
+            virtual ~Material() = default;
+
             virtual std::type_index getType() override;
 
-            core::Sampler m_sampler;
+            std::unordered_map<std::string, Texture*> const& getTextures() const;
+
+            std::unordered_map<std::string, Texture*> m_textures;
+
+            glm::vec3 m_emissive{ 0.0f, 0.0f, 0.0f };
+
+            bool m_double_sided{ false };
+
+            float m_alpha_cutoff{ 0.5f };
+
+            AlphaMode m_alpha_mode{ AlphaMode::Opaque };
         };
     }
 }

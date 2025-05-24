@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2019-2022, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,24 +17,15 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <vector>
-
-#include "core/sampler.h"
-#include "scene/component.h"
+#include "scene/components/image/image.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
+        class Ktx : public Image {
         public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
+            Ktx(const std::string& name, const std::vector<uint8_t>& data, ContentType content_type);
 
-            core::Sampler m_sampler;
+            virtual ~Ktx() = default;
         };
     }
 }

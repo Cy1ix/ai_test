@@ -1,146 +1,73 @@
 /* Copyright (c) 2021-2024, NVIDIA CORPORATION. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
- *
- * Licensed under the Apache License, Version 2.0 the "License";
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
  */
 
 #pragma once
 
-#include "common/object_builder.h"
-#include "common/allocator.h"
-#include "core/vulkan_resource.h"
-#include "core/image_view.h"
-#include <unordered_set>
+#include "core/device.h"
+#include "scene/component.h"
+#include <vulkan/vulkan.hpp>
 
 namespace frame {
-    namespace core {
-        class Device;
-        class ImageViewCPP;
-        class ImageCPP;
+	namespace scene {
+		bool isAstc(vk::Format format);
 		
-		struct ImageCPPBuilder : public alloc::ObjectBuilder<ImageCPPBuilder, vk::ImageCreateInfo> {
-		private:
-			using Parent = ObjectBuilder<ImageCPPBuilder, vk::ImageCreateInfo>;
-		public:
-			ImageCPPBuilder(vk::Extent3D const& extent) :
-				Parent(vk::ImageCreateInfo{ {}, vk::ImageType::e2D, vk::Format::eR8G8B8A8Unorm, extent, 1, 1 })
-			{}
-
-			ImageCPPBuilder(vk::Extent2D const& extent) :
-				ImageCPPBuilder(vk::Extent3D{ extent.width, extent.height, 1 })
-			{}
-
-			ImageCPPBuilder(uint32_t width, uint32_t height = 1, uint32_t depth = 1) :
-				ImageCPPBuilder(vk::Extent3D{ width, height, depth })
-			{}
-
-			ImageCPPBuilder& withFormat(vk::Format format) {
-				m_create_info.format = format;
-				return *this;
-			}
-
-			ImageCPPBuilder& withImageCPPType(vk::ImageType type) {
-				m_create_info.imageType = type;
-				return *this;
-			}
-
-			ImageCPPBuilder& withArrayLayers(uint32_t layers) {
-				m_create_info.arrayLayers = layers;
-				return *this;
-			}
-
-			ImageCPPBuilder& withMipLevels(uint32_t levels) {
-				m_create_info.mipLevels = levels;
-				return *this;
-			}
-
-			ImageCPPBuilder& withSampleCount(vk::SampleCountFlagBits sample_count) {
-				m_create_info.samples = sample_count;
-				return *this;
-			}
-
-			ImageCPPBuilder& withTiling(vk::ImageTiling tiling) {
-				m_create_info.tiling = tiling;
-				return *this;
-			}
-
-			ImageCPPBuilder& withUsage(vk::ImageUsageFlags usage) {
-				m_create_info.usage = usage;
-				return *this;
-			}
-
-			ImageCPPBuilder& withFlags(vk::ImageCreateFlags flags) {
-				m_create_info.flags = flags;
-				return *this;
-			}
-			
-			ImageCPP build(Device& device) const;
-			
-			std::unique_ptr<ImageCPP> buildUnique(Device& device) const;
+		struct Mipmap {
+			uint32_t level = 0;
+			uint32_t offset = 0;
+			vk::Extent3D extent = { 0, 0, 0 };
 		};
 
-        class ImageCPP : public alloc::VmaAllocated<vk::Image> {
-        public:
-			ImageCPP(Device& device,
-				vk::Image handle,
-				const vk::Extent3D& extent,
-				vk::Format format,
-				vk::ImageUsageFlags image_usage,
-				bool is_external = false,
-                vk::SampleCountFlagBits sample_count = vk::SampleCountFlagBits::e1);
+		class Image : public Component {
+		public:
+			Image(const std::string& name, std::vector<uint8_t>&& data = {}, std::vector<Mipmap>&& mipmaps = { {} });
+			virtual ~Image() = default;
 
-            ImageCPP(Device& device,
-                const vk::Extent3D& extent,
-                vk::Format format,
-                vk::ImageUsageFlags image_usage,
-                VmaMemoryUsage memory_usage = VMA_MEMORY_USAGE_AUTO,
-                vk::SampleCountFlagBits sample_count = vk::SampleCountFlagBits::e1,
-                uint32_t mip_levels = 1,
-                uint32_t array_layers = 1,
-                vk::ImageTiling tiling = vk::ImageTiling::eOptimal,
-                vk::ImageCreateFlags flags = {},
-                uint32_t num_queue_families = 0,
-                const uint32_t* queue_families = nullptr);
+		public:
+			enum ContentType {
+				Unknown,
+				Color,
+				Other
+			};
 
-            ImageCPP(Device& device, const ImageCPPBuilder& builder);
+			static std::unique_ptr<Image> load(const std::string& name, const std::string& uri, ContentType content_type);
+			
+			virtual std::type_index getType() override;
 
-            ImageCPP(const ImageCPP&) = delete;
-            ImageCPP(ImageCPP&& other) noexcept;
-            ImageCPP& operator=(const ImageCPP&) = delete;
-            ImageCPP& operator=(ImageCPP&&) = delete;
+			void clearData();
+			void coerceFormatToSrgb();
+			void createVkImage(core::Device& device, vk::ImageViewType image_view_type = vk::ImageViewType::e2D, vk::ImageCreateFlags flags = {});
+			void generateMipmaps();
+			const std::vector<uint8_t>& getData() const;
+			const vk::Extent3D& getExtent() const;
+			vk::Format getFormat() const;
+			const uint32_t getLayers() const;
+			const std::vector<Mipmap>& getMipmaps() const;
+			const std::vector<std::vector<vk::DeviceSize>>& getOffsets() const;
+			const core::ImageCPP& getImage() const;
+			const core::ImageViewCPP& getImageView() const;
 
-			~ImageCPP();
+		protected:
+			Mipmap& getMipmap(size_t index);
+			std::vector<uint8_t>& getMutData();
+			std::vector<Mipmap>& getMutMipmaps();
+			void setData(const uint8_t* raw_data, size_t size);
+			void setDepth(uint32_t depth);
+			void setFormat(vk::Format format);
+			void setHeight(uint32_t height);
+			void setLayers(uint32_t layers);
+			void setOffsets(const std::vector<std::vector<vk::DeviceSize>>& offsets);
+			void setWidth(uint32_t width);
 
-            uint8_t* map();
-
-            vk::ImageType getType() const;
-            const vk::Extent3D& getExtent() const;
-            vk::Format getFormat() const;
-            vk::SampleCountFlagBits getSampleCount() const;
-            vk::ImageUsageFlags getUsage() const;
-            vk::ImageTiling getTiling() const;
-            vk::ImageSubresource getSubresource() const;
-            uint32_t getArrayLayerCount() const;
-            std::unordered_set<ImageViewCPP*>& getViews();
-			void addViews(ImageViewCPP* image_view);
-			const bool isExternal() const;
-
-        private:
-            vk::ImageCreateInfo m_create_info;
-            vk::ImageSubresource m_subresource;
-            std::unordered_set<ImageViewCPP*> m_views;
-			bool m_is_external_resource = false;
-        };
-    }
+		private:
+			std::vector<uint8_t> m_data;
+			vk::Format m_format = vk::Format::eUndefined;
+			uint32_t m_layers = 1;
+			std::vector<Mipmap> m_mipmaps{ {} };
+			std::vector<std::vector<vk::DeviceSize>> m_offsets;
+			std::unique_ptr<core::ImageCPP> m_image;
+			std::unique_ptr<core::ImageViewCPP> m_image_view;
+		};
+	}
 }

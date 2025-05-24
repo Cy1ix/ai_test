@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2024, NVIDIA CORPORATION. All rights reserved.
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,19 +22,33 @@
 #include <typeinfo>
 #include <vector>
 
-#include "core/sampler.h"
 #include "scene/component.h"
+#include "scene/components/aabb.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
+        
+        class Node;
+        class SubMesh;
+        
+        class Mesh : public Component {
         public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
+            Mesh(const std::string& name);
+            virtual ~Mesh() = default;
 
-            core::Sampler m_sampler;
+            void updateBounds(const std::vector<glm::vec3>& vertex_data, const std::vector<uint16_t>& index_data = {});
+            virtual std::type_index getType() override;
+            const AABB& getBounds() const;
+            void addSubmesh(SubMesh& submesh);
+            const std::vector<SubMesh*>& getSubmeshes() const;
+            void addNode(Node& node);
+            const std::vector<Node*>& getNodes() const;
+
+        private:
+            AABB m_bounds;
+            std::vector<SubMesh*> m_submeshes;
+            std::vector<Node*> m_nodes;
         };
+
     }
 }

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2019-2021, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -22,19 +22,33 @@
 #include <typeinfo>
 #include <vector>
 
-#include "core/sampler.h"
+#include "platform/input.h"
 #include "scene/component.h"
 
 namespace frame {
-    namespace scene {
-        class Sampler : public Component {
-        public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
+	namespace scene {
+		class Node;
 
-            core::Sampler m_sampler;
-        };
-    }
+		class Script : public Component {
+		public:
+			Script(const std::string& name = "");
+			virtual ~Script() = default;
+
+			virtual std::type_index getType() override;
+			virtual void update(float delta_time) = 0;
+			virtual void inputEvent(const platform::InputEvent& input_event);
+			virtual void resize(uint32_t width, uint32_t height);
+		};
+
+		class NodeScript : public Script {
+		public:
+			NodeScript(Node& node, const std::string& name = "");
+			virtual ~NodeScript() = default;
+
+			Node& getNode();
+
+		private:
+			Node& m_node;
+		};
+	}
 }

@@ -15,26 +15,16 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <vector>
-
-#include "core/sampler.h"
-#include "scene/component.h"
+#include "scene/components/material/pbr_material.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
-        public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
+        PBRMaterial::PBRMaterial(const std::string& name) :
+            Material{ name }
+        {}
 
-            core::Sampler m_sampler;
-        };
+        std::type_index PBRMaterial::getType() {
+            return typeid(PBRMaterial);
+        }
     }
 }

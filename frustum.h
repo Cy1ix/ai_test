@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2019-2024, Sascha Willems
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,24 +17,31 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <vector>
+#include <array>
 
-#include "core/sampler.h"
-#include "scene/component.h"
+#include "global_common.h"
 
 namespace frame {
-    namespace scene {
-        class Sampler : public Component {
-        public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
+	namespace scene {
+		enum Side {
+			LEFT = 0,
+			RIGHT = 1,
+			TOP = 2,
+			BOTTOM = 3,
+			BACK = 4,
+			FRONT = 5
+		};
+		
+		class Frustum {
+		public:
+			void update(const glm::mat4& matrix);
+			
+			bool checkSphere(glm::vec3 pos, float radius);
 
-            core::Sampler m_sampler;
-        };
-    }
+			const std::array<glm::vec4, 6>& getPlanes() const;
+
+		private:
+			std::array<glm::vec4, 6> m_planes;
+		};
+	}
 }

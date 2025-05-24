@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2019-2021, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,24 +17,33 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <typeinfo>
 #include <vector>
 
-#include "core/sampler.h"
-#include "scene/component.h"
+#include "scene/components/transform.h"
+#include "scene/scripts/script.h"
+
+using TransformAnimFn = std::function<void(frame::scene::Transform&, float)>;
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
+        class NodeAnimation : public NodeScript {
         public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
+            NodeAnimation(Node& node, TransformAnimFn animation_fn);
 
-            core::Sampler m_sampler;
+            virtual ~NodeAnimation() = default;
+
+            virtual void update(float delta_time) override;
+
+            void setAnimation(TransformAnimFn handle);
+
+            void clearAnimation();
+
+        private:
+            TransformAnimFn m_animation_fn{};
         };
     }
 }

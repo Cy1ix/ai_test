@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2018-2024, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -20,21 +20,23 @@
 #include <memory>
 #include <string>
 #include <typeinfo>
+#include <unordered_map>
 #include <vector>
 
-#include "core/sampler.h"
-#include "scene/component.h"
+#include "global_common.h"
+#include "scene/components/material/material.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
+        class PBRMaterial : public Material {
         public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
+            PBRMaterial(const std::string& name);
+            virtual ~PBRMaterial() = default;
             virtual std::type_index getType() override;
 
-            core::Sampler m_sampler;
+            glm::vec4 m_color{ 0.0f, 0.0f, 0.0f, 0.0f };
+            float m_metallic{ 0.0f };
+            float m_roughness{ 0.0f };
         };
     }
 }

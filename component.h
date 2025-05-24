@@ -17,24 +17,33 @@
 
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <string>
-#include <typeinfo>
+#include <typeindex>
 #include <vector>
-
-#include "core/sampler.h"
-#include "scene/component.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
-        public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
 
-            core::Sampler m_sampler;
+        class Component {
+        public:
+            Component() = default;
+            Component(const std::string& name);
+            Component(Component&& other) = default;
+            virtual ~Component() = default;
+
+            const std::string& getName() const;
+            virtual std::type_index getType() = 0;
+
+        private:
+            std::string m_name;
         };
+
+        inline Component::Component(const std::string& name) : m_name{ name } {}
+
+        inline const std::string& Component::getName() const {
+            return m_name;
+        }
     }
 }

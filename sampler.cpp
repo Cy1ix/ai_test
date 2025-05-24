@@ -15,26 +15,18 @@
  * limitations under the License.
  */
 
-#pragma once
-
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <vector>
-
-#include "core/sampler.h"
-#include "scene/component.h"
+#include "sampler.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
-        public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
+        Sampler::Sampler(const std::string& name, core::Sampler&& vk_sampler) :
+            Component{ name },
+            m_sampler{ std::move(vk_sampler) }
+        {
+        }
 
-            core::Sampler m_sampler;
-        };
+        std::type_index Sampler::getType() {
+            return typeid(Sampler);
+        }
     }
 }

@@ -1,4 +1,4 @@
-/* Copyright (c) 2018-2019, Arm Limited and Contributors
+/* Copyright (c) 2019-2024, Arm Limited and Contributors
  *
  * SPDX-License-Identifier: Apache-2.0
  *
@@ -17,24 +17,31 @@
 
 #pragma once
 
-#include <memory>
-#include <string>
-#include <typeinfo>
-#include <vector>
-
-#include "core/sampler.h"
-#include "scene/component.h"
+#include "common/common.h"
+#include "scene/components/image/image.h"
 
 namespace frame {
     namespace scene {
-        class Sampler : public Component {
-        public:
-            Sampler(const std::string& name, core::Sampler&& vk_sampler);
-            Sampler(Sampler&& other) = default;
-            virtual ~Sampler() = default;
-            virtual std::type_index getType() override;
-
-            core::Sampler m_sampler;
+        struct BlockDim {
+            uint8_t x;
+            uint8_t y;
+            uint8_t z;
         };
+
+        class Astc : public Image {
+        public:
+            Astc(const Image& image);
+
+            Astc(const std::string& name, const std::vector<uint8_t>& data);
+
+            virtual ~Astc() = default;
+
+        private:
+            void decode(BlockDim blockdim, vk::Extent3D extent, const uint8_t* data, uint32_t size);
+
+            void init();
+        };
+
+        BlockDim toBlockDim(const vk::Format format);
     }
 }

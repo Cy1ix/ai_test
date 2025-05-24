@@ -1,0 +1,36 @@
+/* Copyright (c) 2020, Broadcom Inc. and Contributors
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ *
+ * Licensed under the Apache License, Version 2.0 the "License";
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#include "stats/frame_stats_provider.h"
+
+namespace frame {
+	namespace stats {
+		FrameTimeStatsProvider::FrameTimeStatsProvider(std::set<StatIndex>& requested_stats) {
+			requested_stats.erase(StatIndex::frame_times);
+		}
+
+		bool FrameTimeStatsProvider::isAvailable(StatIndex index) const {
+			return index == StatIndex::frame_times;
+		}
+
+		StatsProvider::Counters FrameTimeStatsProvider::sample(float delta_time) {
+			Counters res;
+			res[StatIndex::frame_times].result = delta_time;
+			return res;
+		}
+	}
+}
